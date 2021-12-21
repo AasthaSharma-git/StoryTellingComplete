@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Platform,
   StatusBar,
   Image,
@@ -14,7 +13,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { RFValue } from "react-native-responsive-fontsize";
 import AppLoading from "expo-app-loading";
 import * as Font from "expo-font";
-import firebase from "firebase";
+import firebase from 'firebase'
 
 let customFonts = {
   "Bubblegum-Sans": require("../assets/fonts/BubblegumSans-Regular.ttf")
@@ -25,9 +24,9 @@ export default class StoryCard extends Component {
     super(props);
     this.state = {
       fontsLoaded: false,
-      light_theme: true,
-      story_id: this.props.story.key,
-      story_data: this.props.story.value
+      light_theme:false,
+      story_id:this.props.story.key,
+      story_data:this.props.story.value
     };
   }
 
@@ -35,104 +34,70 @@ export default class StoryCard extends Component {
     await Font.loadAsync(customFonts);
     this.setState({ fontsLoaded: true });
   }
+  async fetchUser() {
+    let theme;
+    await firebase
+      .database()
+      .ref("/users/" + firebase.auth().currentUser.uid)
+      .on("value", function (snapshot) {
+        theme = snapshot.val().current_theme;
+        
+      });
+    this.setState({
+      light_theme: theme === "light" ? true : false,
+     
+    });
+  }
+
 
   componentDidMount() {
     this._loadFontsAsync();
     this.fetchUser();
   }
 
-  fetchUser = () => {
-    let theme;
-    firebase
-      .database()
-      .ref("/users/" + firebase.auth().currentUser.uid)
-      .on("value", snapshot => {
-        theme = snapshot.val().current_theme;
-        this.setState({ light_theme: theme === "light" });
-      });
-  };
-
   render() {
-    let story = this.state.story_data;
+    let story=this.state.story_data;
+    let images = {
+      image_1: require("../assets/story_image_1.png"),
+      image_2: require("../assets/story_image_2.png"),
+      image_3: require("../assets/story_image_3.png"),
+      image_4: require("../assets/story_image_4.png"),
+      image_5: require("../assets/story_image_5.png")
+    };
     if (!this.state.fontsLoaded) {
       return <AppLoading />;
     } else {
-      let images = {
-        image_1: require("../assets/story_image_1.png"),
-        image_2: require("../assets/story_image_2.png"),
-        image_3: require("../assets/story_image_3.png"),
-        image_4: require("../assets/story_image_4.png"),
-        image_5: require("../assets/story_image_5.png")
-      };
       return (
-        <TouchableOpacity
-          style={styles.container}
-          onPress={() =>
-            this.props.navigation.navigate("StoryScreen", {
-              story: this.props.story
-            })
+        <TouchableOpacity style={styles.container} onPress={
+          ()=>{
+            this.props.navigation.navigate("StoryScreen",{story:story})
           }
-        >
-          <SafeAreaView style={styles.droidSafeArea} />
-          <View
-            style={
-              this.state.light_theme
-                ? styles.cardContainerLight
-                : styles.cardContainer
-            }
-          >
+        }>
+          <View style={this.state.light_theme?
+            [styles.cardContainer,{backgroundColor:'white',borderColor:'#15193c',borderWidth:1}]:styles.cardContainer}>
             <Image
-              source={images[story.preview_image]}
+              source={images[story.previewImage]}
               style={styles.storyImage}
             ></Image>
-            <View style={styles.titleContainer}>
-              <View style={styles.titleTextContainer}>
-                <Text
-                  style={
-                    this.state.light_theme
-                      ? styles.storyTitleTextLight
-                      : styles.storyTitleText
-                  }
-                >
-                  {story.title}
-                </Text>
-                <Text
-                  style={
-                    this.state.light_theme
-                      ? styles.storyAuthorTextLight
-                      : styles.storyAuthorText
-                  }
-                >
-                  {story.author}
-                </Text>
-                <Text
-                  style={
-                    this.state.light_theme
-                      ? styles.descriptionTextLight
-                      : styles.descriptionText
-                  }
-                >
-                  {this.props.story.description}
-                </Text>
-              </View>
-            </View>
 
+            <View style={styles.titleContainer}>
+              <Text style={this.state.light_theme?
+                [styles.storyTitleText,{color:'#15193c'}]:styles.storyTitleText}>
+                {story.title}
+              </Text>
+              <Text style={this.state.light_theme?
+                [styles.storyAuthorText,{color:'#15193c'}]:styles.storyAuthorText}>
+                {story.author}
+              </Text>
+              <Text style={this.state.light_theme?
+                [styles.storyDescriptionText,{color:'#15193c'}]:styles.storyDescriptionText}>
+                {story.description}
+              </Text>
+            </View>
             <View style={styles.actionContainer}>
               <View style={styles.likeButton}>
-                <Ionicons
-                  name={"heart"}
-                  size={RFValue(30)}
-                  color={this.state.light_theme ? "black" : "white"}
-                />
-                <Text
-                  style={
-                    this.state.light_theme
-                      ? styles.likeTextLight
-                      : styles.likeText
-                  }
-                >
-                  12k
-                </Text>
+                <Ionicons name={"heart"} size={RFValue(30)} color={"white"} />
+                <Text style={styles.likeText}>{story.likes}</Text>
               </View>
             </View>
           </View>
@@ -143,26 +108,13 @@ export default class StoryCard extends Component {
 }
 
 const styles = StyleSheet.create({
-  droidSafeArea: {
-    marginTop: Platform.OS === "android" ? StatusBar.currentHeight : RFValue(35)
+  container: {
+    flex: 1
   },
   cardContainer: {
     margin: RFValue(13),
     backgroundColor: "#2f345d",
     borderRadius: RFValue(20)
-  },
-  cardContainerLight: {
-    margin: RFValue(13),
-    backgroundColor: "white",
-    borderRadius: RFValue(20),
-    shadowColor: "rgb(0, 0, 0)",
-    shadowOffset: {
-      width: 3,
-      height: 3
-    },
-    shadowOpacity: RFValue(0.5),
-    shadowRadius: RFValue(5),
-    elevation: RFValue(2)
   },
   storyImage: {
     resizeMode: "contain",
@@ -174,44 +126,21 @@ const styles = StyleSheet.create({
     paddingLeft: RFValue(20),
     justifyContent: "center"
   },
-  titleTextContainer: {
-    flex: 0.8
-  },
-  iconContainer: {
-    flex: 0.2
-  },
   storyTitleText: {
-    fontFamily: "Bubblegum-Sans",
     fontSize: RFValue(25),
+    fontFamily: "Bubblegum-Sans",
     color: "white"
-  },
-  storyTitleTextLight: {
-    fontFamily: "Bubblegum-Sans",
-    fontSize: RFValue(25),
-    color: "black"
   },
   storyAuthorText: {
-    fontFamily: "Bubblegum-Sans",
     fontSize: RFValue(18),
+    fontFamily: "Bubblegum-Sans",
     color: "white"
   },
-  storyAuthorTextLight: {
+  storyDescriptionText: {
     fontFamily: "Bubblegum-Sans",
-    fontSize: RFValue(18),
-    color: "black"
-  },
-  descriptionContainer: {
-    marginTop: RFValue(5)
-  },
-  descriptionText: {
-    fontFamily: "Bubblegum-Sans",
-    fontSize: RFValue(13),
-    color: "white"
-  },
-  descriptionTextLight: {
-    fontFamily: "Bubblegum-Sans",
-    fontSize: RFValue(13),
-    color: "black"
+    fontSize: 13,
+    color: "white",
+    paddingTop: RFValue(10)
   },
   actionContainer: {
     justifyContent: "center",
@@ -229,11 +158,6 @@ const styles = StyleSheet.create({
   },
   likeText: {
     color: "white",
-    fontFamily: "Bubblegum-Sans",
-    fontSize: RFValue(25),
-    marginLeft: RFValue(5)
-  },
-  likeTextLight: {
     fontFamily: "Bubblegum-Sans",
     fontSize: RFValue(25),
     marginLeft: RFValue(5)
