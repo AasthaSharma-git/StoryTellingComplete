@@ -8,11 +8,12 @@ import {
   StatusBar,
   Image,
   ScrollView,
-  Dimensions
+  Dimensions,
+  TouchableOpacity
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { RFValue } from "react-native-responsive-fontsize";
-import { TouchableOpacity } from "react-native-gesture-handler";
+
 import * as Speech from "expo-speech";
 import firebase from "firebase";
 import AppLoading from "expo-app-loading";
@@ -22,40 +23,54 @@ let customFonts = {
   "Bubblegum-Sans": require("../assets/fonts/BubblegumSans-Regular.ttf")
 };
 
-export default class StoryScreen extends Component {
+export default class StoryScreen extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       fontsLoaded: false,
       speakerColor: "gray",
       speakerIcon: "volume-high-outline",
-      light_theme: false
+      light_theme: true,
+      likes:this.props.route.params.story.value.likes,
+      isliked:this.props.route.params.isliked
     };
   }
+  likeAction=()=>{
+    this.props.route.params.liked()
+    this.setState({
+      likes:this.state.isliked?this.state.likes-1:this.state.likes+1,
+      isliked:!this.state.isliked
+    })
+  
+ 
+  
+   
+  }
+
 
   async _loadFontsAsync() {
     await Font.loadAsync(customFonts);
     this.setState({ fontsLoaded: true });
   }
 
-  componentDidMount() {
+  componentDidMount=()=> {
     this._loadFontsAsync();
     this.fetchUser()
   }
 
-  async fetchUser() {
+  fetchUser=async ()=> {
     let theme;
-    await firebase
-      .database()
-      .ref("/users/" + firebase.auth().currentUser.uid)
-      .on("value", function (snapshot) {
-        theme = snapshot.val().current_theme;
-
-      });
-    this.setState({
-      light_theme: theme === "light" ? true : false,
-
-    });
+    firebase
+        .database()
+        .ref("/users/" + firebase.auth().currentUser.uid)
+        .on("value", (snapshot)=> {
+          theme = snapshot.val().current_theme;
+          this.setState({
+            light_theme: theme === "light" ? true : false,
+           
+          });
+          
+        });
   }
 
   async initiateTTS(title, author, story, moral) {
@@ -74,7 +89,7 @@ export default class StoryScreen extends Component {
   }
 
   render() {
-    console.log(this.props.route.params.story)
+  
     if (!this.props.route.params) {
       this.props.navigation.navigate("Home");
     } else if (!this.state.fontsLoaded) {
@@ -109,15 +124,15 @@ export default class StoryScreen extends Component {
                 <View style={styles.titleTextContainer}>
                   <Text style={this.state.light_theme?
                   [styles.storyTitleText,{color:'#15193c'}]:styles.storyTitleText}>
-                    {this.props.route.params.story.title}
+                    {this.props.route.params.story.value.title}
                   </Text>
                   <Text style={this.state.light_theme?
                   [styles.storyAuthorText,{color:'#15193c'}]:styles.storyAuthorText}>
-                    {this.props.route.params.story.author}
+                    {this.props.route.params.story.value.author}
                   </Text>
                   <Text style={this.state.light_theme?
                   [styles.storyAuthorText,{color:'#15193c'}]:styles.storyAuthorText}>
-                    {this.props.route.params.story.created_on}
+                    {this.props.route.params.story.value.created_on}
                   </Text>
                 </View>
                 <View style={styles.iconContainer}>
@@ -143,19 +158,26 @@ export default class StoryScreen extends Component {
               <View style={styles.storyTextContainer}>
                 <Text style={this.state.light_theme?
                   [styles.storyText,{color:'#15193c'}]:styles.storyText}>
-                  {this.props.route.params.story.story}
+                  {this.props.route.params.story.value.story}
                 </Text>
                 <Text style={this.state.light_theme?
                   [styles.moralText,{color:'#15193c'}]:styles.moralText}>
-                  Moral - {this.props.route.params.story.moral}
+                  Moral - {this.props.route.params.story.value.moral}
                 </Text>
               </View>
-              <View style={styles.actionContainer}>
-                <View style={styles.likeButton}>
-                  <Ionicons name={"heart"} size={RFValue(30)} color={"white"} />
-                  <Text style={styles.likeText}>12k</Text>
-                </View>
+             
+              <TouchableOpacity onPress={this.likeAction}>
+            <View style={styles.actionContainer}>
+              <View style={this.state.isliked?
+                styles.likeButtonLiked:styles.likeButtonDisliked}>
+                <Ionicons name={"heart"} size={RFValue(30)} color={this.state.light_theme?"gray":"white"}  />
+                <Text style={this.state.light_theme?[styles.likeText,{color:'black'}]:styles.likeText}>{this.state.likes}</Text>
               </View>
+            </View>
+
+            </TouchableOpacity>
+
+           
             </ScrollView>
           </View>
         </View>
@@ -263,5 +285,24 @@ const styles = StyleSheet.create({
     fontFamily: "Bubblegum-Sans",
     fontSize: RFValue(25),
     marginLeft: RFValue(5)
+  },
+  likeButtonLiked:{
+    width: RFValue(160),
+    height: RFValue(40),
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    backgroundColor: "#eb3948",
+    borderRadius: RFValue(30)
+  },
+  likeButtonDisliked:{
+    width: RFValue(160),
+    height: RFValue(40),
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    borderColor: "#eb3948",
+    borderRadius: RFValue(30)
+
   }
 });

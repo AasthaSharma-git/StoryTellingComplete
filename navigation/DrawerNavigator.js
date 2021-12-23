@@ -2,56 +2,70 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import BottomTabNavigator from './TabNavigator';
-import Profile from '../screens/Profile";
+import Profile from '../screens/Profile';
 import Logout from '../screens/Logout';
 import StackNavigator from './StackNavigator';
 import CustomSideBarMenu from '../screens/CustomSideBarMenu'
 import firebase from 'firebase';
 const Drawer=createDrawerNavigator();
 
+
+
+
+
+
 class DrawerNavigator extends React.Component{
 
    constructor(props){
        super(props);
        this.state={
-       light_theme:false
+       light_theme:false,
+       
        }
    }
    componentDidMount(){
      this.fetchUser();
    }
 
-    async fetchUser() {
-        let theme;
-        await firebase
-          .database()
-          .ref("/users/" + firebase.auth().currentUser.uid)
-          .on("value", function (snapshot) {
-            theme = snapshot.val().current_theme;
-            
-          });
-        this.setState({
-          light_theme: theme === "light" ? true : false,
-         
-        });
-        //this.props.setUpdatedToFalse()
-      }
+ 
 
+  
+ 
+  
+
+  fetchUser() {
+        let theme;
+        firebase
+        .database()
+        .ref("/users/" + firebase.auth().currentUser.uid)
+        .on("value",  (snapshot)=> {
+          theme = snapshot.val().current_theme;
+          this.setState({
+           light_theme: theme === "light" ? true : false,
+          
+         })
+        });
+     
+      }
+     
 
 
 
     render(){ 
         let props=this.props;
+       
+        
         return(
           
 
             <Drawer.Navigator
+            
             drawerContentOptions={{
-              activeTintColor: "#e91e63",
+              activeTintColor: "purple",
               inactiveTintColor: this.state.light_theme ? "black" : "white",
-              itemStyle: { marginVertical: 5 }
+              itemStyle: { marginVertical: 5 },
             }}
-             drawerContent={props=> <CustomSideBarMenu {...props}/>}
+             drawerContent={props=> <CustomSideBarMenu  {...props}/>}
 
             screenOptions={{headerShown:false}}
             

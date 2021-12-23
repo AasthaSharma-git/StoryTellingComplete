@@ -9,7 +9,7 @@ import firebase from 'firebase'
 let customFont={
     'Bubblegum-Sans':require('../assets/fonts/BubblegumSans-Regular.ttf')
 }
-let stories=require('../temp.json');
+
 export default class Feed extends React.Component{
     constructor(){
         super();
@@ -58,14 +58,15 @@ export default class Feed extends React.Component{
       await firebase
         .database()
         .ref("/users/" + firebase.auth().currentUser.uid)
-        .on("value", function (snapshot) {
+        .on("value", (snapshot)=> {
           theme = snapshot.val().current_theme;
+          this.setState({
+            light_theme: theme === "light" ? true : false,
+           
+          });
           
         });
-      this.setState({
-        light_theme: theme === "light" ? true : false,
-       
-      });
+      
       //this.props.setUpdatedToFalse()
     }
   

@@ -15,8 +15,8 @@ return(
    initialRouteName='Home'
    >
 
-   <Stack.Screen name="Home" component={BottomTabNavigator}/>
-    <Stack.Screen name="StoryScreen" component={StoryScreen}/>
+   <Stack.Screen name="Home" component={BottomTabNavigator} options={{unmountOnBlur:true}}/>
+    <Stack.Screen name="StoryScreen" component={StoryScreen} options={{unmountOnBlur:true}}/>
     
     </Stack.Navigator>
     

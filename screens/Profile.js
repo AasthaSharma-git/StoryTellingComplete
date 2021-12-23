@@ -43,7 +43,9 @@ export default class Profile extends Component {
       .database()
       .ref()
       .update(updates);
+
     this.setState({ isEnabled: !previous_state, light_theme: previous_state });
+    
   }
 
   async _loadFontsAsync() {

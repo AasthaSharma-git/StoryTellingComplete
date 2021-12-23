@@ -14,6 +14,7 @@ import { RFValue } from "react-native-responsive-fontsize";
 import AppLoading from "expo-app-loading";
 import * as Font from "expo-font";
 import firebase from 'firebase'
+import { TouchableNativeFeedback } from "react-native-web";
 
 let customFonts = {
   "Bubblegum-Sans": require("../assets/fonts/BubblegumSans-Regular.ttf")
@@ -26,7 +27,9 @@ export default class StoryCard extends Component {
       fontsLoaded: false,
       light_theme:false,
       story_id:this.props.story.key,
-      story_data:this.props.story.value
+      story_data:this.props.story.value,
+      isliked:this.props.story.value.isliked,
+      likes:this.props.story.value.likes
     };
   }
 
@@ -35,19 +38,68 @@ export default class StoryCard extends Component {
     this.setState({ fontsLoaded: true });
   }
   async fetchUser() {
-    let theme;
     await firebase
-      .database()
-      .ref("/users/" + firebase.auth().currentUser.uid)
-      .on("value", function (snapshot) {
-        theme = snapshot.val().current_theme;
-        
+    .database()
+    .ref("/users/" + firebase.auth().currentUser.uid)
+    .on("value", (snapshot)=> {
+      theme = snapshot.val().current_theme;
+      var temp=snapshot.val().isliked;
+      this.setState({
+        light_theme: theme === "light" ? true : false,
+        liked:temp
+       
       });
-    this.setState({
-      light_theme: theme === "light" ? true : false,
-     
+      
     });
   }
+
+  likeAction=()=>{
+    if(this.state.isliked){
+      firebase
+      .database()
+      .ref('posts')
+      .child(this.state.story_id)
+      .child('likes')
+      .set(firebase.database.ServerValue.increment(-1))
+      firebase
+      .database()
+      .ref('posts')
+      .child(this.state.story_id)
+      .child('isliked')
+      .set(false)
+      
+      this.setState({
+        likes:this.state.likes-1,
+        isliked:false
+      })
+
+    }
+    else{
+      firebase
+      .database()
+      .ref('posts')
+      .child(this.state.story_id)
+      .child('likes')
+      .set(firebase.database.ServerValue.increment(1))
+
+      firebase
+      .database()
+      .ref('posts')
+      .child(this.state.story_id)
+      .child('isliked')
+      .set(true)
+
+      this.setState({
+        likes:this.state.likes+1,
+        isliked:true
+      })
+
+    }
+   
+   
+  }
+ 
+
 
 
   componentDidMount() {
@@ -56,6 +108,7 @@ export default class StoryCard extends Component {
   }
 
   render() {
+    
     let story=this.state.story_data;
     let images = {
       image_1: require("../assets/story_image_1.png"),
@@ -70,7 +123,9 @@ export default class StoryCard extends Component {
       return (
         <TouchableOpacity style={styles.container} onPress={
           ()=>{
-            this.props.navigation.navigate("StoryScreen",{story:story})
+          
+          
+            this.props.navigation.navigate("StoryScreen",{liked:this.likeAction,story:this.props.story,isliked:this.state.isliked,likes:this.state.likes})
           }
         }>
           <View style={this.state.light_theme?
@@ -94,12 +149,16 @@ export default class StoryCard extends Component {
                 {story.description}
               </Text>
             </View>
+            <TouchableOpacity onPress={this.likeAction}>
             <View style={styles.actionContainer}>
-              <View style={styles.likeButton}>
-                <Ionicons name={"heart"} size={RFValue(30)} color={"white"} />
-                <Text style={styles.likeText}>{story.likes}</Text>
+              <View style={this.state.isliked?styles.likeButtonLiked:styles.likeButtonDisliked}>
+                <Ionicons name={"heart"} size={RFValue(30)} color={this.state.light_theme?"gray":"white"}  />
+                <Text style={this.state.light_theme?[styles.likeText,{color:'black'}]:styles.likeText}>{this.state.likes}</Text>
               </View>
             </View>
+
+            </TouchableOpacity>
+           
           </View>
         </TouchableOpacity>
       );
@@ -161,5 +220,24 @@ const styles = StyleSheet.create({
     fontFamily: "Bubblegum-Sans",
     fontSize: RFValue(25),
     marginLeft: RFValue(5)
+  },
+  likeButtonLiked:{
+    width: RFValue(160),
+    height: RFValue(40),
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    backgroundColor: "#eb3948",
+    borderRadius: RFValue(30)
+  },
+  likeButtonDisliked:{
+    width: RFValue(160),
+    height: RFValue(40),
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    borderColor: "#eb3948",
+    borderRadius: RFValue(30)
+
   }
 });

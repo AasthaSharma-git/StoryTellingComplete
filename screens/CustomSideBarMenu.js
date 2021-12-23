@@ -12,39 +12,40 @@ export default class CustomSideBarMenu extends React.Component{
         }
     }
     componentDidMount(){
-      this.fetchUser();
+     this.fetchUser();
+       
     }
  
      async fetchUser() {
-         let theme;
-         await firebase
-           .database()
-           .ref("/users/" + firebase.auth().currentUser.uid)
-           .on("value", function (snapshot) {
-             theme = snapshot.val().current_theme;
-             
-           });
-         this.setState({
-           light_theme: theme === "light" ? true : false,
-          
+      let theme;
+      firebase
+         .database()
+         .ref("/users/" + firebase.auth().currentUser.uid)
+         .on("value",  (snapshot)=> {
+           theme = snapshot.val().current_theme;
+           this.setState({
+            light_theme: theme === "light" ? true : false,
+           
+          })
          });
-         //this.props.setUpdatedToFalse()
+      
        }
 
 
     render(){
+      //console.log('Called')
         let props=this.props;
         return(
             <View style={{
                 flex:1,
-                backgroundColor:this.state.light_theme?"white":"black"
+                backgroundColor:this.state.light_theme?"white":"#15193c"
             }}>
               <Image
               source={require('../assets/logo.png')}
               style={styles.sideMenuProfileIcon}
               
               />  
-              <DrawerContentScrollView {...props}>
+              <DrawerContentScrollView {...props} >
                   <DrawerItemList {...props}/>
               </DrawerContentScrollView>
 

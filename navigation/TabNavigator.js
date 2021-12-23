@@ -23,17 +23,16 @@ export default class BottomTabNavigator extends React.Component {
     this.fetchUser();
   }
   async fetchUser() {
-    let theme;
     await firebase
-      .database()
-      .ref("/users/" + firebase.auth().currentUser.uid)
-      .on("value", function (snapshot) {
-        theme = snapshot.val().current_theme;
-        
+    .database()
+    .ref("/users/" + firebase.auth().currentUser.uid)
+    .on("value", (snapshot)=> {
+      theme = snapshot.val().current_theme;
+      this.setState({
+        light_theme: theme === "light" ? true : false,
+       
       });
-    this.setState({
-      light_theme: theme === "light" ? true : false,
-     
+      
     });
   }
   changeUpdated=()=>{

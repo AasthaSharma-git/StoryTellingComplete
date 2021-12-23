@@ -45,17 +45,16 @@ export default class CreateStory extends Component {
     };
   }
   async fetchUser() {
-    let theme;
     await firebase
-      .database()
-      .ref("/users/" + firebase.auth().currentUser.uid)
-      .on("value", function (snapshot) {
-        theme = snapshot.val().current_theme;
-        
+    .database()
+    .ref("/users/" + firebase.auth().currentUser.uid)
+    .on("value", (snapshot)=> {
+      theme = snapshot.val().current_theme;
+      this.setState({
+        light_theme: theme === "light" ? true : false,
+       
       });
-    this.setState({
-      light_theme: theme === "light" ? true : false,
-     
+      
     });
   }
    addStory = async()=>{
@@ -69,7 +68,8 @@ export default class CreateStory extends Component {
         author:firebase.auth().currentUser.displayName,
           author_uid:firebase.auth().currentUser.uid,
           created_on:new Date().toString(),
-          likes:0
+          likes:0,
+          isliked:false
 
       }
      
